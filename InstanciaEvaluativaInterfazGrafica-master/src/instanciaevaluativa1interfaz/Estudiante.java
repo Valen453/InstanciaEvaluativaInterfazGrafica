@@ -8,10 +8,10 @@ import java.util.ArrayList; // 1. ¡SIEMPRE va el import arriba de todo!
  *
  * @author Valen453
  */
-public class Estudiante extends PersonaAcademica{
+public class Estudiante extends PersonaAcademica implements Consultable{
     private String carrera;
     private int anioIngreso;
-    private ArrayList<Materia> materias;
+    private ArrayList<InscripcionMateria> materias;
     
     
     public Estudiante(String nombre, String legajo, String carrera, int anioIngreso) {
@@ -21,17 +21,83 @@ public class Estudiante extends PersonaAcademica{
         this.materias = new ArrayList<>();
     }
     
-public void inscribirse(Materia m) {
+    
+    
+ // Metodos
+   
+    //Metodo inscribirse
+   public void inscribirse(Materia m) {
     if (m == null) {
         System.out.println("Error: Materia inválida.");
         return;
     }
     
-    // AGREGÁ ESTA LÍNEA para guardar la materia en el ArrayList:
-    this.materias.add(m);
+    // Se aseguyra que no se duplique
+    if (getInscripcion(m.getCodigo()) != null) {
+        System.out.println("Error: El estudiante ya está inscripto en la materia con código " + m.getCodigo());
+        return;
+    }
+    
+    // Se agrega en caso de no estar duplicado
+    this.materias.add(new InscripcionMateria(m));
     System.out.println("Inscripción exitosa a: " + m.getNombre());
 }
 
+public InscripcionMateria getInscripcion(String codigoMateria) {
+    // Recorremos la lista de inscripciones del estudiante
+    for (InscripcionMateria mat : this.materias) {
+        // Si el código de la materia coincide
+        if (mat.getMateria().getCodigo().equals(codigoMateria)) {
+            return mat; // Devolvemos la inscripción encontrada
+        }
+    }
+    return null; // Si termina el bucle y no la encontró, devuelve null
+}
+
+public void darDeBaja(String codigoMateria) {
+    // Buscar inscripcion por codigo
+    InscripcionMateria encontrada = getInscripcion(codigoMateria);
+    
+        // Eliminar del array
+    if (encontrada != null) {
+            this.materias.remove(encontrada);
+            System.out.println("Se dio de baja la materia con código: " + codigoMateria);
+        } 
+    else {
+            // Si no esta ionscripto lo avisa
+            System.out.println("Error: El estudiante no está inscripto en la materia: " + codigoMateria);
+        }
+    }
+
+    public double getPromedioGeneral() { //
+            if (this.materias.isEmpty()) {
+                //Devuelve 0 en caso de que no haya notas
+                return 0.0;
+            }
+
+            double sumaPromedios = 0.0;
+
+            for (InscripcionMateria ins : this.materias) {
+                sumaPromedios += ins.getPromedio(); // Suma el promedio individual de cada cursada
+            }
+
+            return sumaPromedios / this.materias.size(); //
+        }
+    
+    public ArrayList<InscripcionMateria> getMateriasCriticas() { //
+        ArrayList<InscripcionMateria> criticas = new ArrayList<>(); //
+        
+        for (InscripcionMateria ins : this.materias) {
+            double asistencia = ins.getPorcentajeAsistencia();
+
+            // Caso en el que se agregan las materias a criticas
+            if (asistencia >= 75.0 && asistencia <= 85.0) {
+                criticas.add(ins); //
+            }
+        }
+        return criticas; //
+    }
+    //Sobreesctibe consultable
     @Override
     public void mostrarResumen() {
         System.out.println("Perfil Estudiantil:");
