@@ -41,6 +41,7 @@ public class InscripcionMateria implements Evaluable {
     public void registrarAsistencia(boolean presente) {
         totalClases++;
         if (presente) clasesAsistidas++;
+        
     }
 
     // Agrega una nota validando que este en rango 0-10

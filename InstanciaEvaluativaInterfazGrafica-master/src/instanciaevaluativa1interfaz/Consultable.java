@@ -9,5 +9,6 @@ package instanciaevaluativa1interfaz;
  * @author Valen453
  */
 public interface Consultable {
-    
+
+    void mostrarResumen();
 }

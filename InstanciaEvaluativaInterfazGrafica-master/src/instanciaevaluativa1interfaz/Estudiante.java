@@ -97,12 +97,42 @@ public void darDeBaja(String codigoMateria) {
         }
         return criticas; //
     }
-    //Sobreesctibe consultable
+    
+    
+    //Sobrecarga de metodos, 
+    public InscripcionMateria buscarMateria(String codigo) {
+        for (InscripcionMateria ins : this.materias) {
+            // Compara el codigo de la materia
+            if (ins.getMateria().getCodigo().equalsIgnoreCase(codigo)) {
+                return ins; 
+            }
+        }
+        return null;
+    }
+    
+    public ArrayList<InscripcionMateria> buscarMateria(int cuatrimestre) {
+        ArrayList<InscripcionMateria> filtradas = new ArrayList<>();
+        for (InscripcionMateria ins : this.materias) {
+            //compara e cuatrimestre y lo agrega a un array
+            if (ins.getMateria().getCuatrimestre() == cuatrimestre) {
+                filtradas.add(ins);
+            }
+        }
+        return filtradas;
+    }
+    
+    //Sobreesctibe resumen de consultable
     @Override
     public void mostrarResumen() {
-        System.out.println("Perfil Estudiantil:");
-        System.out.println("Legajo: " + getLegajo());
-        System.out.println("Estudiante: " + getNombre());
-        System.out.println("Carrera: " + this.carrera);
+            System.out.println("\n=========================================");
+            System.out.println("         PERFIL DEL ESTUDIANTE          ");
+            System.out.println("=========================================");
+            System.out.println("Legajo: " + getLegajo());
+            System.out.println("Estudiante: " + getNombre());
+            System.out.println("Carrera: " + this.carrera);
+            System.out.println("Año de Ingreso: " + this.anioIngreso);
+            System.out.println("Materias Inscriptas: " + this.materias.size());
+            System.out.printf("Promedio General: " + getPromedioGeneral());
+            System.out.println("=========================================");
     }
 }

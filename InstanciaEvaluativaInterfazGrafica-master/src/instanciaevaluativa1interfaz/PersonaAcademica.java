@@ -9,8 +9,8 @@ package instanciaevaluativa1interfaz;
  * @author Valen453
  */
 public abstract class PersonaAcademica {
-    String nombre;
-    String legajo;
+    private String nombre;
+    private String legajo;
     
     PersonaAcademica(String nombre,String legajo) 
     {
