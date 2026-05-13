@@ -121,6 +121,9 @@ public void darDeBaja(String codigoMateria) {
         return filtradas;
     }
     
+    public ArrayList<InscripcionMateria> getMateriasCursando() {
+        return this.materias;
+    }
     //Sobreesctibe resumen de consultable
     @Override
     public void mostrarResumen() {
@@ -132,7 +135,7 @@ public void darDeBaja(String codigoMateria) {
             System.out.println("Carrera: " + this.carrera);
             System.out.println("Año de Ingreso: " + this.anioIngreso);
             System.out.println("Materias Inscriptas: " + this.materias.size());
-            System.out.printf("Promedio General: " + getPromedioGeneral());
+            System.out.println("Promedio General: " + getPromedioGeneral());
             System.out.println("=========================================");
     }
 }
