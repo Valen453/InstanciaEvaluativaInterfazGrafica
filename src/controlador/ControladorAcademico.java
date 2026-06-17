@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import modelo.Estudiante;
 import modelo.Materia;
 import modelo.InscripcionMateria;
-import dao.EstudianteDAO;
+import dao.EstudianteDAOJDBC;
 import dao.MateriaDAO;
 import dao.InscripcionMateriaDAO;
 
@@ -24,12 +24,12 @@ public class ControladorAcademico {
 
     // Instancias de tus DAOs reales
     private MateriaDAO materiaDAO;
-    private EstudianteDAO estudianteDAO;
+    private EstudianteDAOJDBC estudianteDAO;
     private InscripcionMateriaDAO inscripcionDAO;
     
     public ControladorAcademico() {
         this.materiaDAO = new MateriaDAO();
-        this.estudianteDAO = new EstudianteDAO();
+        this.estudianteDAO = new EstudianteDAOJDBC();
         this.inscripcionDAO = new InscripcionMateriaDAO();
         
         // 1. Cargar materias base
@@ -69,7 +69,7 @@ public class ControladorAcademico {
 
         Estudiante nuevoEstudiante = new Estudiante(nombre, legajo, carrera, anioIngreso);
         estudiantes.add(nuevoEstudiante);
-        estudianteDAO.guardar(estudiantes); // Guarda en estudiantes.txt
+        estudianteDAO.guardar(nuevoEstudiante); // Guarda en estudiantes.txt
     }
 
     public void inscribirEstudiante(String legajo, String codigoMateria) {
