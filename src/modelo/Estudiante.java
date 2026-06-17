@@ -151,4 +151,7 @@ public class Estudiante extends PersonaAcademica implements Consultable {
         return new Estudiante(partes[0], partes[1], partes[2], Integer.parseInt(partes[3]));
     }
 
+    public ArrayList<InscripcionMateria> getMaterias() {
+        return this.materias;
+    }
 }

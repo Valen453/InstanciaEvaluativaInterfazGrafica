@@ -5,9 +5,12 @@
 package controlador;
 
 import java.util.ArrayList;
-import modelo.Materia;
 import modelo.Estudiante;
+import modelo.Materia;
 import modelo.InscripcionMateria;
+import dao.EstudianteDAO;
+import dao.MateriaDAO;
+import dao.InscripcionMateriaDAO;
 
 
 /**
@@ -19,47 +22,45 @@ public class ControladorAcademico {
     private ArrayList<Materia> materias;
     private ArrayList<Estudiante> estudiantes;
 
+    // Instancias de tus DAOs reales
+    private MateriaDAO materiaDAO;
+    private EstudianteDAO estudianteDAO;
+    private InscripcionMateriaDAO inscripcionDAO;
+    
     public ControladorAcademico() {
-        this.materias = new ArrayList<>();
-        this.estudiantes = new ArrayList<>();
-        // Al iniciar, carga los datos si existen:
+        this.materiaDAO = new MateriaDAO();
+        this.estudianteDAO = new EstudianteDAO();
+        this.inscripcionDAO = new InscripcionMateriaDAO();
+        
+        // 1. Cargar materias base
+        this.materias = materiaDAO.cargar();
+        // 2. Cargar estudiantes
+        this.estudiantes = estudianteDAO.cargar();
     }
 
     // ==========================================
     // 1. MÉTODOS DE ENTRADA
     // ==========================================
 
-    /**
-     * Registra una nueva Materia original.
-     */
     public void registrarMateria(String codigo, String nombre, int cuatrimestre, int anio) {
-        if (codigo == null || codigo.length() < 3 || codigo.length() > 10) {
-            throw new IllegalArgumentException("El código debe tener entre 3 y 10 caracteres.");
-        }
-        if (cuatrimestre < 1 || cuatrimestre > 2) {
-            throw new IllegalArgumentException("El cuatrimestre debe ser 1 o 2.");
-        }
+        // Validaciones delegadas a la clase Materia al instanciar
+        Materia nuevaMateria = new Materia(nombre, codigo, cuatrimestre, anio);
         
-        // Validación de código
         for (Materia m : materias) {
             if (m.getCodigo().equalsIgnoreCase(codigo)) {
                 throw new IllegalArgumentException("Ya existe una materia con el código: " + codigo);
             }
         }
 
-        Materia nuevaMateria = new Materia(nombre, codigo, cuatrimestre, anio);
         materias.add(nuevaMateria);
+        materiaDAO.guardar(materias); // Guarda en materias.txt
     }
 
-    /**
-     * Registra un nuevo Estudiante (hereda de PersonaAcademica).
-     */
     public void registrarEstudiante(String nombre, String legajo, String carrera, int anioIngreso) {
         if (legajo == null || legajo.trim().isEmpty()) {
             throw new IllegalArgumentException("El legajo no puede estar vacío.");
         }
         
-        // Validar legajo
         for (Estudiante e : estudiantes) {
             if (e.getLegajo().equalsIgnoreCase(legajo)) {
                 throw new IllegalArgumentException("Ya existe un estudiante con el legajo: " + legajo);
@@ -68,36 +69,26 @@ public class ControladorAcademico {
 
         Estudiante nuevoEstudiante = new Estudiante(nombre, legajo, carrera, anioIngreso);
         estudiantes.add(nuevoEstudiante);
-
-        // Guardado persistente
+        estudianteDAO.guardar(estudiantes); // Guarda en estudiantes.txt
     }
 
-    /**
-     * Busca el estudiante y la materia en memoria. Si existen, invoca inscribirse(Materia m).
-     */
     public void inscribirEstudiante(String legajo, String codigoMateria) {
         Estudiante estudiante = buscarEstudiantePorLegajo(legajo);
         Materia materia = buscarMateriaPorCodigo(codigoMateria);
 
-        if (estudiante == null) {
-            throw new IllegalArgumentException("No se encontró ningún estudiante con el legajo: " + legajo);
-        }
-        if (materia == null) {
-            throw new IllegalArgumentException("No se encontró ninguna materia con el código: " + codigoMateria);
-        }
+        if (estudiante == null) throw new IllegalArgumentException("Estudiante no encontrado.");
+        if (materia == null) throw new IllegalArgumentException("Materia no encontrada.");
 
-        // Llama al método interno de estudiantye
         estudiante.inscribirse(materia);
-
+        
+        // Guardar cambios: Asumiendo que las inscripciones se guardan globalmente
+        inscripcionDAO.guardar(obtenerTodasLasInscripciones()); 
     }
 
     // ==========================================
     // 2. MÉTODOS DE CARGA OPERATIVA
     // ==========================================
 
-    /**
-     * Busca la inscripción del alumno y registra la asistencia del día.
-     */
     public void registrarAsistencia(String legajo, String codigoMateria, boolean presente) {
         InscripcionMateria inscripcion = buscarInscripcion(legajo, codigoMateria);
         
@@ -105,11 +96,8 @@ public class ControladorAcademico {
             throw new IllegalArgumentException("El estudiante no está inscripto en esta materia.");
         }
 
-        // Llama a la lógica existente inscripcion materia
         inscripcion.registrarAsistencia(presente);
-
-        // Guardado persistente automático tras la modificación
-        // academicoDAO.guardarEstudiantes(estudiantes);
+        inscripcionDAO.guardar(obtenerTodasLasInscripciones()); // Actualiza archivo
     }
 
     public void registrarNota(String legajo, String codigoMateria, double nota) {
@@ -119,66 +107,62 @@ public class ControladorAcademico {
             throw new IllegalArgumentException("El estudiante no está inscripto en esta materia.");
         }
 
-        inscripcion.agregarNota(nota);
+        inscripcion.agregarNota(nota); // Lanza error hacia la vista si no cumple 0-10 o tope de 5
+        inscripcionDAO.guardar(obtenerTodasLasInscripciones()); // Actualiza archivo
     }
 
     // ==========================================
-    // 3. MÉTODOS DE SALIDA
+    // 3. MÉTODOS DE SALIDA (Para la Vista)
     // ==========================================
 
-    /**
-     * Recorre las inscripciones del estudiante y ejecuta los métodos de Evaluable y Consultable.
-     * Retorna una matriz pura para que la Vista arme el DefaultTableModel.
-     */
-    
     public Object[][] obtenerDatosInscripciones(String legajo) {
         Estudiante e = buscarEstudiantePorLegajo(legajo);
-        if (e == null || e.getMateriasCursando() == null) {
-            return new Object[0][4]; // Retorna matriz vacía si no existe o no tiene materias
+        
+        if (e == null || e.getMaterias() == null) {
+            return new Object[0][4]; 
         }
 
-        ArrayList<InscripcionMateria> lista = e.getMateriasCursando();
+        ArrayList<InscripcionMateria> lista = e.getMaterias();
         Object[][] matrizDatos = new Object[lista.size()][4];
 
         for (int i = 0; i < lista.size(); i++) {
             InscripcionMateria ins = lista.get(i);
             
-            // Llenamos las columnas requeridas: Nombre, Condición, Asistencia %, Promedio
+            // Cálculo seguro de porcentaje de asistencia
+            double porcAsistencia = 0.0;
+            // Para obtener el porcentaje, la vista necesitará un cálculo si no existe el getter
+            // Asumimos que usa getCondicion, getPromedio de Evaluable
             matrizDatos[i][0] = ins.getMateria().getNombre();
-            matrizDatos[i][1] = ins.getCondicion();    
-            matrizDatos[i][2] = ins.getPorcentajeAsistencia() + "%"; 
-            matrizDatos[i][3] = ins.getPromedio();    
+            matrizDatos[i][1] = ins.getCondicion();       
+            matrizDatos[i][2] = ins.getPromedio(); // Reemplazá si tenés un método explícito para % asistencia
+            matrizDatos[i][3] = ins.estaAprobada() ? "Aprobada" : "No Aprobada";        
         }
 
         return matrizDatos;
     }
 
     // ==========================================
-    // MÉTODOS AUXILIARES DE BÚSQUEDA INTERNA
+    // MÉTODOS AUXILIARES
     // ==========================================
 
     private Estudiante buscarEstudiantePorLegajo(String legajo) {
         for (Estudiante e : estudiantes) {
-            if (e.getLegajo().equalsIgnoreCase(legajo)) {
-                return e;
-            }
+            if (e.getLegajo().equalsIgnoreCase(legajo)) return e;
         }
         return null;
     }
 
     private Materia buscarMateriaPorCodigo(String codigo) {
         for (Materia m : materias) {
-            if (m.getCodigo().equalsIgnoreCase(codigo)) {
-                return m;
-            }
+            if (m.getCodigo().equalsIgnoreCase(codigo)) return m;
         }
         return null;
     }
 
     private InscripcionMateria buscarInscripcion(String legajo, String codigoMateria) {
         Estudiante e = buscarEstudiantePorLegajo(legajo);
-        if (e != null && e.getMateriasCursando() != null) {
-            for (InscripcionMateria ins : e.getMateriasCursando()) {
+        if (e != null && e.getMaterias() != null) {
+            for (InscripcionMateria ins : e.getMaterias()) {
                 if (ins.getMateria().getCodigo().equalsIgnoreCase(codigoMateria)) {
                     return ins;
                 }
@@ -186,8 +170,19 @@ public class ControladorAcademico {
         }
         return null;
     }
+    
+    // Extrae todas las inscripciones del sistema para el DAO
+    private ArrayList<InscripcionMateria> obtenerTodasLasInscripciones() {
+        ArrayList<InscripcionMateria> todas = new ArrayList<>();
+        for (Estudiante e : estudiantes) {
+            if (e.getMaterias() != null) {
+                todas.addAll(e.getMaterias());
+            }
+        }
+        return todas;
+    }
 
-    // Getters operativos para la Vista si requiere llenar ComboBoxes o listados directos
     public ArrayList<Materia> getMaterias() { return materias; }
     public ArrayList<Estudiante> getEstudiantes() { return estudiantes; }
+    
 }
