@@ -139,6 +139,7 @@ primero.
 _Completar con el link al archivo de Figma del grupo._
 
 ## Documentación de uso de IA
+Baldovino - https://docs.google.com/document/d/1vzAEqrQzauwXqyRGFClvceVxuBJyBqid2pH3pTqsJmg/edit?usp=sharing
 
 Fontana Valentino
 https://gemini.google.com/share/d214a4d6e144
