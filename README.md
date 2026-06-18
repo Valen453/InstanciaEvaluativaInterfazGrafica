@@ -8,9 +8,10 @@ gráfica en Java Swing, bajo arquitectura **MVC + DAO**.
 
 | Integrante | Rol |
 |---|---|
-| _Completar_ | _Completar_ |
-| _Completar_ | _Completar_ |
-| _Completar_ | _Completar_ |
+| Fontana Valentino | Controlador |
+| Soria Mateo | Modelo |
+| Otonello Paloma | Vista |
+| Baldovino Simona | DAO |
 
 > Recordar: todos los integrantes deben tener commits propios en el
 > repositorio (la falta de commits individuales penaliza el 50% de la nota
@@ -139,5 +140,7 @@ _Completar con el link al archivo de Figma del grupo._
 
 ## Documentación de uso de IA
 
-_Completar: agregar acá el link al README/Word con las capturas de los
-prompts utilizados, según lo pedido en la consigna (entrega individual)._
+Fontana Valentino
+https://gemini.google.com/share/d214a4d6e144
+Soria Mateo
+https://claude.ai/share/4988dda8-f64a-44d9-b456-fe438c1385ac
