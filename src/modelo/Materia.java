@@ -2,13 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package instanciaevaluativa1interfaz;
-
-/**
- *
- * @author MATEO
- */
-
+package modelo;
 
 // Implementa Consultable porque el trabajo lo exige para Materia
 public class Materia implements Consultable {
@@ -19,20 +13,18 @@ public class Materia implements Consultable {
     private int cuatrimestre;
     private int anio;
 
-    // Constructor: recibe los 4 datos y llama a los setters
-    // para que las validaciones se ejecuten desde el principio
+    // Constructor: llama a los setters para que las validaciones
+    // se ejecuten desde el momento en que se crea el objeto
     public Materia(String nombre, String codigo, int cuatrimestre, int anio) {
         setNombre(nombre);
         setCodigo(codigo);
         setCuatrimestre(cuatrimestre);
-        this.anio = anio; // anio no tiene validacion especial
+        this.anio = anio;
     }
 
-    // Getters y setters de nombre (sin validacion especial)
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 
-    // Getter y setter de codigo
     // Validacion: el codigo debe tener entre 3 y 10 caracteres
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) {
@@ -41,7 +33,6 @@ public class Materia implements Consultable {
         this.codigo = codigo;
     }
 
-    // Getter y setter de cuatrimestre
     // Validacion: solo puede ser 1 o 2
     public int getCuatrimestre() { return cuatrimestre; }
     public void setCuatrimestre(int cuatrimestre) {
@@ -50,12 +41,23 @@ public class Materia implements Consultable {
         this.cuatrimestre = cuatrimestre;
     }
 
-    // Getter y setter de anio (sin validacion especial)
     public int getAnio() { return anio; }
     public void setAnio(int anio) { this.anio = anio; }
 
+    // Convierte el objeto a texto separado por comas para guardar en archivo
+    public String toTexto() {
+        return nombre + "," + codigo + "," + cuatrimestre + "," + anio;
+    }
+
+    // Lee una línea del archivo, la separa por comas y reconstruye el objeto
+    public static Materia fromTexto(String linea) {
+        String[] partes = linea.split(",");
+        return new Materia(partes[0], partes[1],
+                Integer.parseInt(partes[2]),
+                Integer.parseInt(partes[3]));
+    }
+
     // Metodo obligatorio de la interface Consultable
-    // Muestra por consola los datos principales de la materia
     @Override
     public void mostrarResumen() {
         System.out.println("Materia: " + nombre + " | Código: " + codigo

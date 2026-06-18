@@ -2,13 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package instanciaevaluativa1interfaz;
-
-/**
- *
- * @author MATEO
- */
-
+package modelo;
 
 import java.util.ArrayList;
 
@@ -16,17 +10,14 @@ import java.util.ArrayList;
 // Implementa Evaluable porque el trabajo lo exige para esta clase
 public class InscripcionMateria implements Evaluable {
 
-    // Referencia a la materia que se esta cursando
     private Materia materia;
-    
     // Contadores para calcular el porcentaje de asistencia
     private int totalClases;
     private int clasesAsistidas;
-    
     // Lista de notas, maximo 5
     private ArrayList<Double> notas;
 
-    // Constructor: recibe la materia y arranca todos los contadores en 0
+    // Constructor: arranca todos los contadores en 0
     public InscripcionMateria(Materia materia) {
         this.materia = materia;
         this.totalClases = 0;
@@ -36,16 +27,13 @@ public class InscripcionMateria implements Evaluable {
 
     public Materia getMateria() { return materia; }
 
-    // Registra una clase: siempre suma al total
-    // Solo suma a asistidas si el alumno estuvo presente
+    // Siempre suma al total, solo suma a asistidas si el alumno estuvo presente
     public void registrarAsistencia(boolean presente) {
         totalClases++;
         if (presente) clasesAsistidas++;
-        
     }
 
-    // Agrega una nota validando que este en rango 0-10
-    // y que no se superen las 5 notas permitidas
+    // Valida rango 0-10 y que no se superen las 5 notas permitidas
     public void agregarNota(double nota) {
         if (nota < 0 || nota > 10)
             throw new IllegalArgumentException("La nota debe estar entre 0 y 10.");
@@ -54,23 +42,19 @@ public class InscripcionMateria implements Evaluable {
         notas.add(nota);
     }
 
-    // Calcula el porcentaje de asistencia
-    // Si no hubo ninguna clase todavia devuelve 100 para no penalizar al alumno
+    // Si no hubo clases devuelve 100 para no penalizar al alumno
     public double getPorcentajeAsistencia() {
         if (totalClases == 0) return 100.0;
         return (clasesAsistidas * 100.0) / totalClases;
     }
 
-    // Metodo de Evaluable
-    // Devuelve "Regular" si la asistencia es 75% o mas, "Libre" si no
+    // Metodo de Evaluable: Regular si asistencia >= 75%, Libre si no
     @Override
     public String getCondicion() {
         return getPorcentajeAsistencia() >= 75 ? "Regular" : "Libre";
     }
 
-    // Metodo de Evaluable
-    // Calcula el promedio sumando todas las notas y dividiendo por la cantidad
-    // Si no hay notas devuelve 0 para evitar division por cero
+    // Metodo de Evaluable: devuelve 0 si no hay notas para evitar division por cero
     @Override
     public double getPromedio() {
         if (notas.isEmpty()) return 0;
@@ -79,15 +63,42 @@ public class InscripcionMateria implements Evaluable {
         return suma / notas.size();
     }
 
-    // Metodo de Evaluable
-    // La materia esta aprobada solo si se cumplen LAS DOS condiciones:
-    // promedio >= 6 Y condicion Regular
+    // Metodo de Evaluable: aprobada solo si promedio >= 6 Y condicion Regular
     @Override
     public boolean estaAprobada() {
         return getPromedio() >= 6 && getCondicion().equals("Regular");
     }
 
-    // Getters de los atributos restantes
+    // Formato: codigoMateria,totalClases,clasesAsistidas,nota1;nota2;nota3
+    // Las notas se separan con ; para no confundirse con la coma principal
+    public String toTexto() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(materia.getCodigo()).append(",");
+        sb.append(totalClases).append(",");
+        sb.append(clasesAsistidas).append(",");
+        for (int i = 0; i < notas.size(); i++) {
+            sb.append(notas.get(i));
+            if (i < notas.size() - 1) sb.append(";");
+        }
+        return sb.toString();
+    }
+
+    // Reconstruye el objeto desde una línea del archivo
+    // Necesita la Materia ya cargada para poder armar la inscripcion
+    public static InscripcionMateria fromTexto(String linea, Materia materia) {
+        String[] partes = linea.split(",");
+        InscripcionMateria ins = new InscripcionMateria(materia);
+        ins.totalClases = Integer.parseInt(partes[1]);
+        ins.clasesAsistidas = Integer.parseInt(partes[2]);
+        // Si hay notas las recorre y las agrega una por una
+        if (partes.length > 3 && !partes[3].isEmpty()) {
+            for (String nota : partes[3].split(";")) {
+                ins.notas.add(Double.parseDouble(nota));
+            }
+        }
+        return ins;
+    }
+
     public ArrayList<Double> getNotas() { return notas; }
     public int getTotalClases() { return totalClases; }
     public int getClasesAsistidas() { return clasesAsistidas; }
