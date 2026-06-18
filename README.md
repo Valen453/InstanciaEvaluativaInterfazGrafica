@@ -134,6 +134,10 @@ primero.
     estructuras de datos simples (`Object[][]`, `String[]`) en vez de
     componentes gráficos.
 
+## Video explicativo
+
+https://youtu.be/KpuJvK8V3Dc
+
 ## Diseño en Figma
 
 _Completar con el link al archivo de Figma del grupo._
