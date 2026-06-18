@@ -150,3 +150,6 @@ https://gemini.google.com/share/d214a4d6e144
 
 Soria Mateo
 https://claude.ai/share/4988dda8-f64a-44d9-b456-fe438c1385ac
+
+Paloma Ottonello;
+https://www.figma.com/design/gDcSl4NLML2C2406jqfOPQ/INTERFAZ-GRAFICA.-INSTANCIA-EVALUATIVA-2?node-id=0-1&t=LdTDXe8JL0phMqxV-1
