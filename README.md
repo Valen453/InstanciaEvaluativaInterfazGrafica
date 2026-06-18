@@ -140,7 +140,7 @@ https://youtu.be/KpuJvK8V3Dc
 
 ## Diseño en Figma
 
-_Completar con el link al archivo de Figma del grupo._
+https://www.figma.com/design/gDcSl4NLML2C2406jqfOPQ/INTERFAZ-GRAFICA.-INSTANCIA-EVALUATIVA-2?node-id=0-1&t=LdTDXe8JL0phMqxV-1
 
 ## Documentación de uso de IA
 Baldovino - https://docs.google.com/document/d/1vzAEqrQzauwXqyRGFClvceVxuBJyBqid2pH3pTqsJmg/edit?usp=sharing
