@@ -1,41 +1,17 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package vista;
 
 import controlador.ControladorAcademico;
-import modelo.Estudiante;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
-/**
- * Ventana principal de la aplicación de autogestión.
- *
- * Estructura general (Layouts):
- *  - BorderLayout como layout principal de la ventana:
- *      NORTH  -> panel de perfil del estudiante (datos visibles siempre)
- *      WEST   -> barra lateral de navegación (BoxLayout)
- *      CENTER -> CardLayout con 2 paneles: "Materias" y "Reportes"
- *  - Dentro de "Materias": GridLayout para el formulario de inscripción,
- *    FlowLayout para los botones de acción.
- *
- * Esta clase NO contiene lógica de negocio ni acceso a archivos: todos los
- * listeners llaman al Controlador, que es quien valida y persiste.
- *
- * @author Paloma
- */
 public class VentanaPrincipal extends JFrame {
 
     private final ControladorAcademico controlador;
 
-    // CardLayout para navegar entre secciones
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel panelCentral = new JPanel();
 
-    // Componentes de la sección "Materias"
     private JTable tablaMaterias;
     private DefaultTableModel modeloTabla;
     private JList<String> listaRiesgo;
@@ -47,10 +23,8 @@ public class VentanaPrincipal extends JFrame {
     private JComboBox<Integer> cmbCuatrimestre;
     private JTextField txtAnio;
 
-    // Sección "Reportes"
     private JTextArea areaReporte;
 
-    // Perfil (NORTH)
     private JLabel lblPerfil;
     private JLabel lblAlerta;
 
@@ -59,10 +33,6 @@ public class VentanaPrincipal extends JFrame {
         initComponents();
         refrescarTodo();
     }
-
-    // ==========================================
-    // CONSTRUCCIÓN DE LA INTERFAZ
-    // ==========================================
 
     private void initComponents() {
         setTitle("Sistema de Autogestión Estudiantil");
@@ -85,7 +55,6 @@ public class VentanaPrincipal extends JFrame {
         cardLayout.show(panelCentral, "MATERIAS");
     }
 
-    // ----- Barra de menú: Archivo y Reportes -----
     private JMenuBar crearMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
@@ -112,7 +81,6 @@ public class VentanaPrincipal extends JFrame {
         return menuBar;
     }
 
-    // ----- NORTH: perfil del estudiante (siempre visible) -----
     private JPanel crearPanelPerfil() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createCompoundBorder(
@@ -131,7 +99,6 @@ public class VentanaPrincipal extends JFrame {
         return panel;
     }
 
-    // ----- WEST: navegación entre secciones (BoxLayout) -----
     private JPanel crearBarraLateral() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -159,17 +126,15 @@ public class VentanaPrincipal extends JFrame {
         return panel;
     }
 
-    // ----- CENTER (card "MATERIAS") -----
     private JPanel crearPanelMaterias() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // --- Tabla de materias inscriptas (con scroll) ---
         String[] columnas = {"Código", "Materia", "Condición", "Asistencia %", "Promedio"};
         modeloTabla = new DefaultTableModel(columnas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // la edición se hace por formulario, no en la celda
+                return false; 
             }
         };
         tablaMaterias = new JTable(modeloTabla);
@@ -185,7 +150,6 @@ public class VentanaPrincipal extends JFrame {
         panelTablaConEstado.add(scrollTabla, BorderLayout.CENTER);
         panelTablaConEstado.add(lblEstadoVacio, BorderLayout.SOUTH);
 
-        // --- Lista de materias en riesgo (con scroll) ---
         modeloListaRiesgo = new DefaultListModel<>();
         listaRiesgo = new JList<>(modeloListaRiesgo);
         JScrollPane scrollLista = new JScrollPane(listaRiesgo);
@@ -198,7 +162,6 @@ public class VentanaPrincipal extends JFrame {
 
         panel.add(panelCentroTabla, BorderLayout.CENTER);
 
-        // --- Formulario de inscripción (GridLayout) + botones (FlowLayout) ---
         JPanel panelInferior = new JPanel(new BorderLayout(0, 8));
 
         JPanel panelForm = new JPanel(new GridLayout(2, 4, 8, 8));
@@ -250,7 +213,6 @@ public class VentanaPrincipal extends JFrame {
         return panel;
     }
 
-    // ----- CENTER (card "REPORTES") -----
     private JPanel crearPanelReportes() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
@@ -282,10 +244,6 @@ public class VentanaPrincipal extends JFrame {
         return panel;
     }
 
-    // ==========================================
-    // ACCIONES (listeners -> controlador)
-    // ==========================================
-
     private void inscribirMateria() {
         try {
             String codigo = txtCodigo.getText().trim();
@@ -293,19 +251,7 @@ public class VentanaPrincipal extends JFrame {
             int cuatrimestre = (Integer) cmbCuatrimestre.getSelectedItem();
             int anio = Integer.parseInt(txtAnio.getText().trim());
 
-            // Si la materia no existe en el catálogo, la creamos primero
-            boolean existe = false;
-            for (modelo.Materia m : controlador.getMaterias()) {
-                if (m.getCodigo().equalsIgnoreCase(codigo)) {
-                    existe = true;
-                    break;
-                }
-            }
-            if (!existe) {
-                controlador.registrarMateria(codigo, nombre, cuatrimestre, anio);
-            }
-
-            controlador.inscribirEstudianteActivo(codigo);
+            controlador.procesarInscripcion(codigo, nombre, cuatrimestre, anio);
 
             JOptionPane.showMessageDialog(this,
                     "Inscripción realizada con éxito.",
@@ -398,7 +344,7 @@ public class VentanaPrincipal extends JFrame {
 
         String input = JOptionPane.showInputDialog(this, "Ingresá la nota (0 a 10):");
         if (input == null) {
-            return; // canceló
+            return; 
         }
 
         try {
@@ -438,7 +384,6 @@ public class VentanaPrincipal extends JFrame {
             return;
         }
 
-        // Resaltar (seleccionar) la primera fila encontrada en la tabla
         for (int fila = 0; fila < modeloTabla.getRowCount(); fila++) {
             String codigoFila = (String) modeloTabla.getValueAt(fila, 0);
             if (codigosEncontrados.contains(codigoFila)) {
@@ -465,10 +410,6 @@ public class VentanaPrincipal extends JFrame {
         JOptionPane.showMessageDialog(this, texto, "Reporte", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // ==========================================
-    // REFRESCO DE DATOS EN PANTALLA
-    // ==========================================
-
     private void refrescarTodo() {
         actualizarPerfil();
         actualizarTabla();
@@ -476,20 +417,25 @@ public class VentanaPrincipal extends JFrame {
     }
 
     private void actualizarPerfil() {
-        Estudiante e = controlador.getEstudianteActivo();
-        if (e == null) {
+        String[] datos = controlador.obtenerDatosPerfilActivo();
+        
+        if (datos == null) {
             lblPerfil.setText("Sin sesión activa");
+            lblAlerta.setText(" ");
             return;
         }
-        lblPerfil.setText(String.format("%s | Legajo: %s | Carrera: %s | Año de ingreso: %d",
-                e.getNombre(), e.getLegajo(), e.getCarrera(), e.getAnioIngreso()));
 
-        double promedio = e.getPromedioGeneral();
-        if (promedio > 0 && promedio < 6) {
-            lblAlerta.setText("Atención: tu promedio general está por debajo de 6.");
-        } else {
-            lblAlerta.setText(" ");
-        }
+        String nombre = datos[0];
+        String legajo = datos[1];
+        String carrera = datos[2];
+        String anio = datos[3];
+        String alerta = datos[5]; // Capturamos la alerta que ya procesó el Controlador
+
+        lblPerfil.setText(String.format("%s | Legajo: %s | Carrera: %s | Año de ingreso: %s",
+                nombre, legajo, carrera, anio));
+
+        // La Vista ya no usa el if matemático, solo imprime el texto recibido
+        lblAlerta.setText(alerta); 
     }
 
     private void actualizarTabla() {

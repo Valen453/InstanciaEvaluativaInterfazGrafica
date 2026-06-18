@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controlador;
 
 import java.util.ArrayList;
@@ -9,60 +5,30 @@ import java.util.Comparator;
 import modelo.Estudiante;
 import modelo.Materia;
 import modelo.InscripcionMateria;
-import dao.EstudianteDAOJDBC;
+import dao.EstudianteDAOJDBC; // Restaurado a tu versión original
 import dao.MateriaDAO;
 import dao.InscripcionMateriaDAO;
 
-/**
- * Controlador de la capa MVC.
- * Recibe las acciones de la Vista, aplica las validaciones/lógica del Modelo,
- * llama al DAO correspondiente para persistir y devuelve datos ya armados
- * (Object[][], String[], etc.) para que la Vista solo los muestre.
- *
- * IMPORTANTE: esta clase NO tiene ningún import de javax.swing ni
- * referencias a componentes gráficos, tal como exige la
- * consigna de arquitectura MVC+DAO.
- *
- * @author Valen453
- */
 public class ControladorAcademico {
 
-    private ArrayList<Materia> materias;
-    private ArrayList<Estudiante> estudiantes;
+    private final ArrayList<Materia> materias;
+    private final ArrayList<Estudiante> estudiantes;
 
-    // Estudiante actualmente "logueado" en la sesión de autogestión
     private Estudiante estudianteActivo;
 
-    // Instancias de los DAOs reales
-    private MateriaDAO materiaDAO;
-    private EstudianteDAOJDBC estudianteDAO;
-    // Nota: InscripcionMateriaDAO se instancia puntualmente por estudiante
-    // (cada legajo tiene su propio archivo de inscripciones), por eso no
-    // se guarda como campo fijo acá.
+    private final MateriaDAO materiaDAO;
+    private final EstudianteDAOJDBC estudianteDAO; // Restaurado a tu versión original
 
     public ControladorAcademico() {
         this.materiaDAO = new MateriaDAO();
-        this.estudianteDAO = new EstudianteDAOJDBC();
+        this.estudianteDAO = new EstudianteDAOJDBC(); // Restaurado a tu versión original
 
-        // 1. Cargar catálogo de materias (texto plano)
         this.materias = materiaDAO.cargar();
-        // 2. Cargar estudiantes (JDBC / MySQL)
         this.estudiantes = estudianteDAO.cargar();
 
         this.estudianteActivo = null;
     }
 
-    // ==========================================
-    // 0. SESIÓN / LOGIN DEL ESTUDIANTE
-    // ==========================================
-
-    /**
-     * Busca un estudiante por legajo y lo deja como estudiante activo de la
-     * sesión. Si lo encuentra, carga además sus inscripciones desde el
-     * archivo de texto correspondiente.
-     *
-     * @return true si encontró y activó al estudiante, false si no existe.
-     */
     public boolean iniciarSesion(String legajo) {
         Estudiante e = buscarEstudiantePorLegajo(legajo);
         if (e == null) {
@@ -73,9 +39,6 @@ public class ControladorAcademico {
         return true;
     }
 
-    /**
-     * Da de alta un estudiante nuevo (vía JDBC) y lo deja como activo.
-     */
     public void registrarEstudianteYLoguear(String nombre, String legajo, String carrera, int anioIngreso) {
         registrarEstudiante(nombre, legajo, carrera, anioIngreso);
         this.estudianteActivo = buscarEstudiantePorLegajo(legajo);
@@ -86,11 +49,6 @@ public class ControladorAcademico {
         return estudianteActivo != null;
     }
 
-    public Estudiante getEstudianteActivo() {
-        return estudianteActivo;
-    }
-
-    // Cada estudiante tiene su propio archivo de inscripciones: inscripciones_<legajo>.txt
     private void cargarInscripcionesDelActivo() {
         if (estudianteActivo == null) {
             return;
@@ -113,12 +71,7 @@ public class ControladorAcademico {
         return "inscripciones_" + legajo + ".txt";
     }
 
-    // ==========================================
-    // 1. MÉTODOS DE ENTRADA (altas)
-    // ==========================================
-
     public void registrarMateria(String codigo, String nombre, int cuatrimestre, int anio) {
-        // Validaciones delegadas a la clase Materia al instanciar
         Materia nuevaMateria = new Materia(nombre, codigo, cuatrimestre, anio);
 
         for (Materia m : materias) {
@@ -128,7 +81,7 @@ public class ControladorAcademico {
         }
 
         materias.add(nuevaMateria);
-        materiaDAO.guardar(materias); // Guarda en materias.txt
+        materiaDAO.guardar(materias); 
     }
 
     public void registrarEstudiante(String nombre, String legajo, String carrera, int anioIngreso) {
@@ -144,13 +97,22 @@ public class ControladorAcademico {
 
         Estudiante nuevoEstudiante = new Estudiante(nombre, legajo, carrera, anioIngreso);
         estudiantes.add(nuevoEstudiante);
-        estudianteDAO.guardar(nuevoEstudiante); // INSERT vía JDBC
+        estudianteDAO.guardar(nuevoEstudiante); 
     }
 
-    /**
-     * Inscribe al estudiante ACTIVO de la sesión en la materia indicada.
-     */
-    public void inscribirEstudianteActivo(String codigoMateria) {
+    public void procesarInscripcion(String codigo, String nombre, int cuatrimestre, int anio) {
+        requiereSesion();
+
+        Materia materiaExistente = buscarMateriaPorCodigo(codigo);
+        
+        if (materiaExistente == null) {
+            registrarMateria(codigo, nombre, cuatrimestre, anio);
+        }
+
+        inscribirEstudianteActivo(codigo);
+    }
+
+    private void inscribirEstudianteActivo(String codigoMateria) {
         requiereSesion();
         Materia materia = buscarMateriaPorCodigo(codigoMateria);
         if (materia == null) {
@@ -166,10 +128,6 @@ public class ControladorAcademico {
         guardarInscripcionesDelActivo();
     }
 
-    /**
-     * Da de baja la materia indicada para el estudiante activo.
-     * La confirmación previa con el usuario es responsabilidad de la Vista.
-     */
     public void darDeBajaActivo(String codigoMateria) {
         requiereSesion();
         InscripcionMateria insc = estudianteActivo.getInscripcion(codigoMateria);
@@ -179,10 +137,6 @@ public class ControladorAcademico {
         estudianteActivo.darDeBaja(codigoMateria);
         guardarInscripcionesDelActivo();
     }
-
-    // ==========================================
-    // 2. MÉTODOS DE CARGA OPERATIVA (sobre el activo)
-    // ==========================================
 
     public void registrarAsistenciaActivo(String codigoMateria, boolean presente) {
         requiereSesion();
@@ -204,15 +158,10 @@ public class ControladorAcademico {
             throw new IllegalArgumentException("El estudiante no está inscripto en esta materia.");
         }
 
-        inscripcion.agregarNota(nota); // Lanza error hacia la vista si no cumple 0-10 o tope de 5
+        inscripcion.agregarNota(nota); 
         guardarInscripcionesDelActivo();
     }
 
-    /**
-     * Indica si, tras registrar la última asistencia, la condición del
-     * estudiante en esa materia quedó por debajo del 75%. Útil para que la
-     * Vista muestre la alerta correspondiente al usuario.
-     */
     public boolean asistenciaEnRiesgo(String codigoMateria) {
         requiereSesion();
         InscripcionMateria inscripcion = estudianteActivo.getInscripcion(codigoMateria);
@@ -222,14 +171,25 @@ public class ControladorAcademico {
         return inscripcion.getPorcentajeAsistencia() < 75.0;
     }
 
-    // ==========================================
-    // 3. MÉTODOS DE SALIDA (Para la Vista)
-    // ==========================================
+    public String[] obtenerDatosPerfilActivo() {
+        if (estudianteActivo == null) {
+            return null;
+        }
+        
+        double promedio = estudianteActivo.getPromedioGeneral();
+        // El Controlador define la regla de negocio para la alerta
+        String alerta = (promedio > 0 && promedio < 6) ? "Atención: tu promedio general está por debajo de 6." : " ";
 
-    /**
-     * Arma la matriz de datos para la JTable de materias inscriptas del
-     * estudiante activo. Columnas: nombre, condición, asistencia %, promedio.
-     */
+        return new String[]{
+            estudianteActivo.getNombre(),
+            estudianteActivo.getLegajo(),
+            estudianteActivo.getCarrera(),
+            String.valueOf(estudianteActivo.getAnioIngreso()),
+            String.valueOf(promedio),
+            alerta // Enviamos la alerta ya resuelta a la Vista
+        };
+    }
+
     public Object[][] obtenerDatosInscripcionesActivo() {
         if (estudianteActivo == null || estudianteActivo.getMaterias() == null) {
             return new Object[0][5];
@@ -250,10 +210,6 @@ public class ControladorAcademico {
         return matrizDatos;
     }
 
-    /**
-     * Devuelve, como arreglo de Strings ya formateados, las materias en
-     * condición de riesgo (asistencia entre 75% y 85%) para poblar el JList.
-     */
     public String[] obtenerMateriasEnRiesgoActivo() {
         if (estudianteActivo == null) {
             return new String[0];
@@ -268,10 +224,6 @@ public class ControladorAcademico {
         return resultado;
     }
 
-    /**
-     * Devuelve, como arreglo de Strings ya formateados, las materias
-     * aprobadas del estudiante activo para poblar el JList.
-     */
     public String[] obtenerMateriasAprobadasActivo() {
         if (estudianteActivo == null) {
             return new String[0];
@@ -291,10 +243,6 @@ public class ControladorAcademico {
         return resultado;
     }
 
-    /**
-     * Reporte de texto con la situación académica general del estudiante
-     * activo, para mostrar en un JLabel/JTextArea desde el menú Reportes.
-     */
     public String generarReporteSituacionGeneral() {
         requiereSesion();
         StringBuilder sb = new StringBuilder();
@@ -321,10 +269,6 @@ public class ControladorAcademico {
         return sb.toString();
     }
 
-    /**
-     * Reporte de materias en riesgo, ordenado ascendentemente por
-     * porcentaje de asistencia.
-     */
     public String generarReporteMateriasEnRiesgo() {
         requiereSesion();
         ArrayList<InscripcionMateria> criticas = new ArrayList<>(estudianteActivo.getMateriasCriticas());
@@ -342,10 +286,6 @@ public class ControladorAcademico {
         return sb.toString();
     }
 
-    /**
-     * Reporte de materias aprobadas con nota máxima, mínima y promedio
-     * del conjunto de promedios.
-     */
     public String generarReporteMateriasAprobadas() {
         requiereSesion();
         ArrayList<InscripcionMateria> aprobadas = new ArrayList<>();
@@ -380,11 +320,6 @@ public class ControladorAcademico {
         return sb.toString();
     }
 
-    /**
-     * Busca materias inscriptas del activo por código o nombre (parcial,
-     * sin distinguir mayúsculas/minúsculas). Devuelve los códigos que
-     * matchean, para que la Vista resalte esas filas en la JTable.
-     */
     public ArrayList<String> buscarInscripcionesPorTexto(String texto) {
         requiereSesion();
         ArrayList<String> codigosEncontrados = new ArrayList<>();
@@ -401,10 +336,6 @@ public class ControladorAcademico {
         }
         return codigosEncontrados;
     }
-
-    // ==========================================
-    // MÉTODOS AUXILIARES
-    // ==========================================
 
     private void requiereSesion() {
         if (estudianteActivo == null) {
@@ -428,13 +359,5 @@ public class ControladorAcademico {
             }
         }
         return null;
-    }
-
-    public ArrayList<Materia> getMaterias() {
-        return materias;
-    }
-
-    public ArrayList<Estudiante> getEstudiantes() {
-        return estudiantes;
     }
 }
